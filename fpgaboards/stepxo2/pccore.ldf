@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaliProject version="3.2" title="pc" device="LCMXO2-4000HC-4MG132C">
+    <Options/>
+    <Implementation title="core" dir="build" synthesis="synplify" default_strategy="pccore">
+        <Options def_top="pccore"/>
+        <Source name="src/brddefs.h" type="Verilog" type_short="Verilog"> <Options/> </Source>
+        <Source name="src/sysdefs.h" type="Verilog" type_short="Verilog"> <Options/> </Source>
+        <Source name="src/sources.v" type="Verilog" type_short="Verilog"> <Options/> </Source>
+        <Source name="pccore.lpf" type="Logic Preference" type_short="LPF"> <Options/> </Source>
+    </Implementation>
+    <Strategy name="pccore" file="pccore.sty"/>
+</BaliProject>
+

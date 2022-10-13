@@ -1,0 +1,171 @@
+//////////////////////////////////////////////////////
+//
+//  File: protomain.v;
+//  Description: This is the top module of the Peripheral
+//     control program, PCcore.
+// 
+/////////////////////////////////////////////////////
+
+// *********************************************************
+// Copyright (c) 2020 Demand Peripherals, Inc.
+// 
+// This file is licensed separately for private and commercial
+// use.  See LICENSE.txt which should have accompanied this file
+// for details.  If LICENSE.txt is not available please contact
+// support@demandperipherals.com to receive a copy.
+// 
+// In general, you may use, modify, redistribute this code, and
+// use any associated patent(s) as long as
+// 1) the above copyright is included in all redistributions,
+// 2) this notice is included in all source redistributions, and
+// 3) this code or resulting binary is not sold as part of a
+//    commercial product.  See LICENSE.txt for definitions.
+// 
+// DPI PROVIDES THE SOFTWARE "AS IS," WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING
+// WITHOUT LIMITATION ANY WARRANTIES OR CONDITIONS OF TITLE,
+// NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR
+// PURPOSE.  YOU ARE SOLELY RESPONSIBLE FOR DETERMINING THE
+// APPROPRIATENESS OF USING OR REDISTRIBUTING THE SOFTWARE (WHERE
+// ALLOWED), AND ASSUME ANY RISKS ASSOCIATED WITH YOUR EXERCISE OF
+// PERMISSIONS UNDER THIS AGREEMENT.
+// 
+// *********************************************************
+
+
+module pccore(BRDIO, PCPIN);
+    inout  [`BRD_MX_IO:0]  BRDIO;     // Board IO 
+    inout  [`MX_PCPIN:0]   PCPIN;     // Peripheral Controller Pins (for Pmods)
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+//  Instantiate the modules/hardware for this design
+
+    // Define the wires to/from the bus controller #0
+    wire CLK_O;                  // the global system clock
+    wire [`MXCLK:0] bc0clocks;   // utility clock pulse from 10ns to 1 second
+
+    // Define the wires to the host serial interface
+    wire hi0m10clk;              // pulse every 10 ms
+    wire [7:0] hi0ohihfdata;     // data byte into the FPGA bus interface
+    wire hi0ohihfrxf_;           // data ready strobe to the FPGA bus interface
+    wire hi0ihifhrd_;            // the bus interface acknowledges the new byte
+    wire hi0ishfhwr;             // pulse to write data to txd output buffer
+    wire hi0buffull;             // ==1 if output FIFO can not take more characters
+    wire [7:0] hi0ihifhdata;     // Data into the txd FIFO
+
+    // Define wires for the physical host serial interface
+    wire hi0tx;                  // serial data to the host
+    wire hi0rx;                  // serial data from the host
+    wire hi0tx_led;              // Tx activity LED
+    wire hi0rx_led;              // Rx activity LED
+    wire hi0err_led;             // output buffer overflow
+
+    // Define the wires to SLIP encoder #0
+    wire [7:0] sl0islhfdata;     // Data in from the host serial interface
+    wire sl0islhfrxf_;           // Receiver full (not) at hshf port  (ready_)
+    wire sl0oslhfrd_;            // Read the new data, latch on rising edge (ack_)
+    wire [7:0] sl0oslhfdata;     // Data out to the bus interface
+    wire sl0oslhfrxf_;           // Receiver full (not) at bihf port
+    wire sl0islhfrd_;            // Read the new data, latched on rising edge
+    wire sl0oslhfpkt;            // ==1 if in a packet.  Rising edge == new pkt
+    wire [7:0] sl0oslfhdata;     // Data out to the host serial interface
+    wire sl0islfhtxe_;           // Transmitter empty (not) at hsfh port
+    wire sl0oslfhwr;             // Write the new data, latch on clk rising edge
+    wire [7:0] sl0islfhdata;     // Data in from the bus interface
+    wire sl0oslfhtxe_;           // Transmitter empty (not) at bifh port
+    wire sl0islfhwr;             // Take the new data, latched on clk rising edge
+    wire sl0islfhpkt;            // ==1 if in a packet.  Rising edge == new pkt
+
+    // Define the wire to the CRC encoder/decoder
+    wire [7:0] cr0icrhfdata;     // Data in from SLIP decoder
+    wire cr0icrhfrxf_;           // Receiver full (not) at crhf port.  Data valid
+    wire cr0ocrhfrd_;            // Read the new data, latch on clk rising edge
+    wire cr0icrhfpkt;            // Slip has a packet for us
+    wire [7:0] cr0ocrhfdata;     // Data out to the bus interface
+    wire cr0ocrhfrxf_;           // Receiver full (not) at bihf port
+    wire cr0icrhfrd_;            // Read the new data, latched on clk rising edge
+    wire cr0ocrhfpkt;            // ==1 if in a packet.  Rising edge == new pkt
+    wire [7:0] cr0ocrfhdata;     // Data out to the SLIP encoder
+    wire cr0icrfhtxe_;           // Transmitter empty (not) 
+    wire cr0ocrfhwr;             // Write the new data, latch on clk rising edge
+    wire cr0ocrfhpkt;            // We have a packet for SLIP
+    wire [7:0] cr0icrfhdata;     // Data in from the bus interface
+    wire cr0ocrfhtxe_;           // Transmitter empty (not)
+    wire cr0icrfhwr;             // Take the new data, latched on clk rising edge
+    wire cr0icrfhpkt;            // ==1 if in a packet.  Rising edge == new pkt
+
+    // Lines to and from the bus interface
+    wire [7:0] bi0ibihfdata;     // Data from the physical interface
+    wire bi0ibihfrxf_;           // Data available if low
+    wire bi0obihfrd_;            // Get data from bus when low
+    wire bi0ibihfpkt;            // High if we're receiving a packet
+    wire [7:0] bi0obifhdata;     // Data toward the physical interface
+    wire bi0ibifhtxe_;           // Able to send new data if low
+    wire bi0obifhwr;             // Write data on positive edge
+    wire bi0obofhpkt;            // High when we want to send a packet
+    wire bi0ibifhen_;            // CRC is busy when high.  Do not poll peri's when high
+    wire [11:0] bi0addr;         // address of target peripheral/register
+    wire [7:0] bi0datout;        // Data OUT to the peripherals
+    wire WE_O;                   // direction of this transfer. Read=0; Write=1
+    wire TGA_O;                  // ==1 if reg access, ==0 if poll
+    wire STALL_I;                // ==1 if target peripheral needs more clock cycles
+    wire bi0u100clk;             // ==1 to mark start of a poll cycle
+    wire ACK_I;                  // ==1 if target peripheral claims the address
+    wire [7:0] bi0datin;         // Data INto the bus interface;
+
+    wire [7:0] ADR_O;            // register addressed within a peripheral
+
+//////////////////////////////////////////////////////////////////////////
+//
+//  Instantiate the modules/hardware for this design
+
+    // Serial host interface
+    hostinterface hi0(CLK_O, hi0m10clk, BRDIO,
+            hi0ohihfdata, hi0ohihfrxf_,hi0ihifhrd_,hi0ishfhwr,hi0buffull,hi0ihifhdata);
+    //hostinterface hi0(CLK_O, hi0m10clk, hi0tx,hi0rx, hi0tx_led, hi0rx_led, 
+            //hi0ohihfdata, hi0ohihfrxf_,hi0ihifhrd_,hi0ishfhwr,hi0buffull,hi0ihifhdata);
+    assign hi0m10clk = bc0clocks[`M10CLK];   // 10 ms clock
+    assign hi0ihifhrd_ = sl0oslhfrd_;
+    assign hi0ihifhdata = sl0oslfhdata;
+    assign hi0ishfhwr = sl0oslfhwr;
+
+    // SLIP encoder/decoder sits between the host interface and the bus interface
+    slip sl0(CLK_O, sl0islhfdata, sl0islhfrxf_, sl0oslhfrd_, sl0oslhfdata, sl0oslhfrxf_,
+            sl0islhfrd_, sl0oslhfpkt, sl0oslfhdata, sl0islfhtxe_, sl0oslfhwr, sl0islfhdata,
+            sl0oslfhtxe_, sl0islfhwr, sl0islfhpkt);
+    assign sl0islhfdata = hi0ohihfdata;
+    assign sl0islhfrxf_ = hi0ohihfrxf_;
+    assign sl0islfhtxe_ = hi0buffull;
+    assign sl0islfhdata = cr0ocrfhdata;
+    assign sl0islfhwr   = cr0ocrfhwr;
+    assign sl0islfhpkt  = cr0ocrfhpkt;
+    assign sl0islhfrd_  = cr0ocrhfrd_;
+
+    // Lines to the CRC generator/checker
+    crc cr0(CLK_O, cr0icrhfdata, cr0icrhfrxf_, cr0ocrhfrd_, cr0icrhfpkt, cr0ocrhfdata,
+            cr0ocrhfrxf_, cr0icrhfrd_, cr0ocrhfpkt, cr0ocrfhdata, cr0icrfhtxe_, cr0ocrfhwr,
+            cr0ocrfhpkt, cr0icrfhdata, cr0ocrfhtxe_, cr0icrfhwr, cr0icrfhpkt);
+    assign cr0icrhfdata = sl0oslhfdata;
+    assign cr0icrhfrxf_ = sl0oslhfrxf_;
+    assign cr0icrhfrd_  = bi0obihfrd_;
+    assign cr0icrhfpkt  = sl0oslhfpkt;
+    assign cr0icrfhtxe_ = sl0oslfhtxe_;
+    assign cr0icrfhdata = bi0obifhdata;
+    assign cr0icrfhwr   = bi0obifhwr;
+    assign cr0icrfhpkt  = bi0obifhpkt;
+
+    // Lines to and from bus interface #0
+    busif bi0(CLK_O, bi0ibihfdata, bi0ibihfrxf_, bi0obihfrd_, bi0ibihfpkt,
+            bi0obifhdata, bi0ibifhtxe_, bi0obifhwr, bi0obifhpkt, bi0ibifhen_, bi0addr,
+            bi0datout, WE_O, TGA_O, STALL_I, bi0u100clk, ACK_I,
+            bi0datin);
+    assign bi0ibihfdata = cr0ocrhfdata;
+    assign bi0ibihfrxf_ = cr0ocrhfrxf_;
+    assign bi0ibihfpkt  = cr0ocrhfpkt;
+    assign bi0ibifhtxe_ = cr0ocrfhtxe_;
+    assign bi0ibifhen_   = cr0ocrfhpkt;
+    assign bi0u100clk = bc0clocks[`U100CLK];
+    assign ADR_O = bi0addr[7:0];
+
