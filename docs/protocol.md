@@ -13,7 +13,7 @@ control packets that go to the FPGA.
 
 ![](arch_v2.svg)
 
-This document describes the packdet processing in the FPGA as well
+This document describes the packet processing in the FPGA as well
 as the low-level protocol between the host and the FPGA,  Briefly:<br>
   - The protocol is organized as SLIP encoded packets with CRC
   - Each packet contains either a Read or Write command
@@ -21,6 +21,7 @@ as the low-level protocol between the host and the FPGA,  Briefly:<br>
   - A packet may read or write the same register or consecutive registers
   - Registers are 8 bits wide
   - Addresses are 12 bits wide
+  - A **slot** is the high 4 bits of the address
   - A response packet indicates success or failure of a command packet
   - Data can be sent automatically from the FPGA to the host
 
@@ -34,25 +35,25 @@ gcode interpreter).
 ## Architecture
 The diagram below gives a glimpse into the internal architecture 
 of the pccore FPGA logic.  There is an address and data bus and
-logic to covert the host packets into bus reads and writes.  One
-peripheral, peripheral #0, always has a list of the peripherals 
-in the FPGA image.  Peripherals #0 also has any I/O specific to
-the FPGA board.  Common FPGA board I/O include buttons, switches,
-LEDs, and seven segment displays.
+logic to convert the host packets into bus reads and writes.  The
+peripheral in slot #0 always has a list of the peripherals in the
+FPGA image.  Slot #0 also has any I/O specific to the FPGA board.
+Common FPGA board I/O includes buttons, switches, LEDs, and seven
+segment displays.
 
 ![](arch5.svg)
 
-Packets to and from the host are SLIP encoded and have a and 16 bit
-CRC checksum.  The diagram shows the FPGA packet processing.  Note
-that inputs to one module is assigned to the name of the previous
-output.  This assignment is done in the "protomain" file.
+Packets to and from the host are SLIP encoded and have a 16 bit
+CRC checksum.  This diagram shows the FPGA packet processing.  
+Note that inputs to one module are assigned to the name of the
+previous output.  This assignment is done in the "protomain" file.
 
 ![](pc_interconnect.svg)
 
-There are two types of host interface.  One is simle serial Tx/Rx
+There are two types of host interface.  One is simple serial Tx/Rx
 with 8 data bits, one stop bit, and one start bit.  Currently 
 supported bit rates are 115200, 230400, and 460800.  It is fairly
-easy to add other or different bit rates.
+easy to add more or different bit rates.
 
 The second type of host interface is FTDI parallel.  The host sees
 what looks like a serial port but the FPGA sees a bidirectional 8
@@ -63,7 +64,7 @@ than USB.
 
 Serial Line IP encapsulation is used to mark the start and end of
 each packet.  This means there should be two consecutive END
-charcaters between packets.  
+characters between packets.  
 
 The CRC generator/checker uses the XMODEM-CRC polynomial.  This
 CRC is fairly easy to compute in an FPGA.  The code for the CRC in
@@ -82,15 +83,15 @@ An overview of the packet format is given in the table below.
 <tr><th> Byte             </th><th> Meaning                                   </th></tr>
 <tr><td> SLIP End Char    </td><td>                                           </td></tr>
 <tr><td> Command Byte     </td><td> Read or Write with/without auto-increment </td></tr>
-<tr><td> Peripheral ID    </td><td> Peripheral/slot # (1110 xxxx)             </td></tr>
+<tr><td> Slot Number      </td><td> Slot address (1110 xxxx)                  </td></tr>
 <tr><td> Register Address </td><td> Start address if auto-increment           </td></tr>
 <tr><td> Request Count    </td><td> Number of bytes requested                 </td></tr>
 <tr><td> Data             </td><td>                                           </td></tr>
 <tr><td> ::::             </td><td>                                           </td></tr>
 <tr><td> Data             </td><td>                                           </td></tr>
 <tr><td> Transfer Count   </td><td> Only on read response                     </td></tr>
-<tr><td> CRC high byte    </td><td>                                           </td></tr>
-<tr><td> CRC low byte     </td><td>                                           </td></tr>
+<tr><td> CRC High Byte    </td><td>                                           </td></tr>
+<tr><td> CRC Low Byte     </td><td>                                           </td></tr>
 <tr><td> SLIP End Char    </td><td>                                           </td></tr>
 </table>
 
@@ -104,19 +105,19 @@ registers.  Valid values for the command byte are:<br>
     0x0a    Write, with autoincrement
 </pre>
 Note that read and write are separate bits in the command byte.
-While currently unused, this allows the possibiliey of a combination
+While currently unused, this makes possible a combination
 read/write command for something such as an SPI transfer.
 
 Bit 7 of the command byte has significance in read response packets
 from the FPGA to the host.  If bit 7 is cleared then the packet is
 in response to a read request from the host.  Peripherals can send
 to the host without a read request from the host.  This is called
-an **autosend** packet.  Bit 7 is set in autosend packets so the
-host can differentiate between are user initiated read requeest and
-an autosend packet.
+**autosend**.  Bit 7 is set in autosend packets so the host can
+differentiate between a user initiated read response and an autosend
+packet.
 
-The peripheral ID byte specicifies the destination peripheral.  Up
-to 16 peripherals are supported and the first peripheral (#0) is
+The slot number byte specifies which peripheral is being addressed.
+Up to 16 peripherals are supported and the first peripheral (#0) is
 reserved for the enumerator and FPGA board I/O.  It is a relatively
 easy change to allow for more than 16 peripherals.
 
@@ -132,8 +133,10 @@ Transfer count specifies how many bytes the peripheral was able to
 accept on a write or how many bytes were available on a read.
 This count is useful when dealing with FIFOs.  On a write
 the transfer count tells how many the byte the FIFO was able to
-accept.  The host application can examine the tranfer count and
+accept.  The host application can examine the transfer count and
 move its write buffer pointer to the first byte that was not 
 accepted.  A host read of a FIFO register usually requests 255
-bytes.
+bytes with the transfer count telling how many bytes were available.
+
+<br>
 
