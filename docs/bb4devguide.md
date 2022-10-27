@@ -1,32 +1,24 @@
 # Verilog Developer's Guide for the Baseboard4
 
-## Introduction
-
-This document describes how create applications for the Baseboard4 using
-the Verilog hardware description language. To appreciate this document
-you should be comfortable with digital design and with the Verilog
-hardware description language. Sections of this document describe:
-
-  -  How to Get Started with Verilog,
-  - "Hello World" in Verilog
-  - Test Your Verilog Design Using Iverilog
-  - Install and Test the Xilinx Toolchain
-  - Download Your Design to the Baseboard
-
 ## How to Get Started with Verilog
 
 In this section you will see how to use Verilog to build FPGA
 applications. The purpose of this section is to give non-Verilog users a
 sense of how Verilog works. This section assumes you are already
-familiar with digital circuit design. This section is broken into four
-topics:
+familiar with digital circuit design.  The sample code below is for
+the Demand Peripherals Baseboard4.  The ideas presented are useful
+for almost all FPGA development boards. 
+
+This section is broken into four topics:
 
   - "hello world" in Verilog
   - use iverilog to test your Verilog circuit
   - install the Xilinx compiler
   - compile your design and test it on the Baseboard
+<br>
+<br>
 
-### "Hello World" in Verilog
+## "Hello World" in Verilog
 
 Most programming languages have a sample application that prints the
 phrase "Hello, World\!" to the console. This application is often used
@@ -151,7 +143,10 @@ many errors it can not identify logic errors in your design. The easiest
 way to spot logic errors is to use a simulator that lets you look at
 each signal in the circuit.
 
-#### Test Your Verilog Design Using Iverilog
+<br>
+<br>
+
+## Test Your Verilog Design Using Iverilog
 
 The word "Verilog" is a combination of the words verification and logic.
 It was originally a *hardware description language* intended as a
@@ -221,7 +216,10 @@ Hold down the CTRL key and use the mouse scroll wheel to compress the
 display until the whole second of simulation is displayed. The display
 should look something like this: ![](/usersguide/counter_leds.png)
 
-### Install and Test the Xilinx Toolchain
+<br>
+<br>
+
+## Install and Test the Xilinx Toolchain
 
 Once your simulation output is correct you are ready to compile and
 download your design to the FPGA. This section describes how to install
@@ -393,8 +391,10 @@ ISE/doc/usenglish/de/dev directory of your WebPACK installation.
   bitgen -g StartUpClk:CClk -g CRC:Enable parout.ncd counter.bit counter.pcf
   promgen -w -p bin -o counter.bin -u 0 counter.bit
 ```
+<br>
+<br>
 
-### Download Your Design to the Baseboard
+## Download Your Design to the Baseboard
 
 When the Baseboard powers up or after pressing the reset button the FPGA
 waits for an binary image from the serial port. Linux serial port

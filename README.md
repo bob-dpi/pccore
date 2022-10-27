@@ -651,12 +651,12 @@ is to write a driver for it.  This section describes the common
 features of the drivers and offers some tips that might simplify
 your driver.
 
-We use the term "driver" but do not confuse these with real
-Linux kernel drivers.  Driver is the right concept but
-technically our drivers are loadable plug-in modules implemented
-as shared-object files.  Our existing drivers all use C but you
-can use any language that can produce a shared-object file.  C,
-C++, and Rust are all good choices.
+We use the term "driver" but do not confuse these with real Linux
+kernel drivers.  Driver is the right concept but technically our
+drivers are loadable plug-in modules implemented as shared-object
+files.  Our existing drivers all use C but you can use any
+language that can produce a shared-object file.  C, C++, and Rust
+are all good choices.
 
 The code structure of drivers is fairly consistent from one
 driver to the next.  This make your documentation describing

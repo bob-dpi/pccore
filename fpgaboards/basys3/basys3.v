@@ -86,7 +86,7 @@ module basys3(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     reg    [20:0] swreg1;    // 16 slide switches plus 5 push buttons
     reg    [20:0] swreg2;    // Used for debounce
     reg    [20:0] swreg3;    // Used for debounce
-    reg    data_ready;       // Detected a change in the switches. Send to the host
+    reg    data_ready;       // Switches changed state . Send to host
     reg    [7:0] segs[3:0];  // Array of segment values
     reg    [1:0] digit;      // Counter to specify displayed digit
 
