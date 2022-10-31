@@ -1,8 +1,0 @@
-`include "../../../peripherals/dpadc12.v"
-`include "../../../peripherals/dpei2c.v"
-`include "../../../peripherals/dpespi.v"
-`include "../../../peripherals/dpin32.v"
-`include "../../../peripherals/dpout32.v"
-`include "../../../peripherals/dproten.v"
-`include "../../../peripherals/dpio8.v"
-`include "../../../peripherals/dptif.v"
