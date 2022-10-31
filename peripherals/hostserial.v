@@ -58,7 +58,7 @@ module hostinterface(clk, m10clk, BRDIO,
 
     reg    [1:0] baudrate;   // baudrate as a divider from 460K
     wire   buffull;          // ==1 if the tx FIFO is full
-    // Uncomment the following line if you want to apply backpressue to the
+    // Uncomment the following line if you want to apply backpressure to the
     // bus when the tx FIFO is full.  You'll also need to change the test 
     // for buffull in the hosttx module.  
     // assign ohsfhtxe_ = buffull;   // apply bus backpressure
@@ -158,7 +158,7 @@ module hostrx(clk,rxd,byteout,ohshfrxf_,ihsfhrd_,baudrate);
            // which should be about 44 times per bit
     wire   nxtbit;     // next value of LPF output for rxd
     wire   curbit;     // current value of LPF output for rxd
-    wire   enable;     // do addumulation if set
+    wire   enable;     // do accumulation if set
     lpf    lpfrx(clk, rxd, enable, nxtbit, curbit);
     assign enable = (smplctr == 1'b0);
 

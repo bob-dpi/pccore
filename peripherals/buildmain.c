@@ -219,7 +219,7 @@ void perilist(int addr, int startpin, int dirs, int numpins, char *peri)
     printf("p%02dSTALL_O,p%02dACK_O,p%02dDAT_I,p%02dDAT_O,", addr,addr,addr,addr);
     printf("bc0clocks,p%02dpins);\n", addr);
     for (i = 0; i < numpins; i++) {
-        // Ignore assignments above max PCPIN.  IO pins are not always in multples of 4
+        // Ignore assignments above max PCPIN.  IO pins are not always in multiples of 4
         if (startpin + 1 > MX_PCPIN)
             break;
 

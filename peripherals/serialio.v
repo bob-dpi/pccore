@@ -66,7 +66,7 @@ module hostrx(clk,rxd,byteout,ready_,ack_,baudrate);
            // which should be about 44 times per bit
     wire   nxtbit;     // next value of LPF output for rxd
     wire   curbit;     // current value of LPF output for rxd
-    wire   enable;     // do addumulation if set
+    wire   enable;     // do accumulation if set
     lpf    lpfrx(clk, rxd, enable, nxtbit, curbit);
     assign enable = (smplctr == 1'b0);
 

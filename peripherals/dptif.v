@@ -244,7 +244,7 @@ module dptif(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
                         // by looking for a sample value of zero.  And/Or
                         // look for a released key by watching for a sample
                         // of one at the previous pressed scancode.  Note
-                        // colunms are the output lines and rows are the input.
+                        // columns are the output lines and rows are the input.
                         // Ignore the first two scanline values since we are
                         // sort of priming the pump to get the real values.
                         // Sample is zero on a key press.

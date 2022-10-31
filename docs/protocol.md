@@ -63,7 +63,7 @@ than USB.
 
 Serial Line IP encapsulation is used to mark the start and end of
 each packet.  This means there should be two consecutive END
-charcaters between packets.  
+characters between packets.  
 
 The CRC generator/checker uses the XMODEM-CRC polynomial.  This
 CRC is fairly easy to compute in an FPGA.  The code for the CRC in
@@ -104,7 +104,7 @@ registers.  Valid values for the command byte are:<br>
     0x0a    Write, with autoincrement
 </pre>
 Note that read and write are separate bits in the command byte.
-While currently unused, this allows the possibiliey of a combination
+While currently unused, this allows the possibility of a combination
 read/write command for something such as an SPI transfer.
 
 Bit 7 of the command byte has significance in read response packets
@@ -112,10 +112,10 @@ from the FPGA to the host.  If bit 7 is cleared then the packet is
 in response to a read request from the host.  Peripherals can send
 to the host without a read request from the host.  This is called
 an **autosend** packet.  Bit 7 is set in autosend packets so the
-host can differentiate between are user initiated read requeest and
+host can differentiate between are user initiated read request and
 an autosend packet.
 
-The peripheral ID byte specicifies the destination peripheral.  Up
+The peripheral ID byte specifies the destination peripheral.  Up
 to 16 peripherals are supported and the first peripheral (#0) is
 reserved for the enumerator and FPGA board I/O.  It is a relatively
 easy change to allow for more than 16 peripherals.

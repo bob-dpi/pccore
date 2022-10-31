@@ -122,7 +122,7 @@ module sr04(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
         // Examine input pins at 1 us intervals
         else if (state == `ST_SMPL)
         begin
-            if (dopoll)             // if examinining inputs
+            if (dopoll)             // if examining inputs
             begin
                 if (taddr == 0)
                     dopoll <= 0;
@@ -147,7 +147,7 @@ module sr04(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
                      (taddr == 6) ? meta[6] : 0;
 
     // The echo times are stored in RAM.  We clear the RAM
-    // during the ST_CLR state and incremnent its value if
+    // during the ST_CLR state and increment its value if
     // input pin "taddr" is high during a poll.
     assign etmin  = (state == `ST_SMPL) ? (etmout + pollpin) : 0 ;
     assign etwen = ((state == `ST_CLR) ||

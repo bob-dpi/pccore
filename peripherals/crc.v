@@ -136,7 +136,7 @@ module crc(clk, icrhfdata, icrhfrxf_, ocrhfrd_, icrhfpkt, ocrhfdata, ocrhfrxf_,
            // Extend in-packet while sending the CRC bytes
     assign ocrfhpkt  = icrfhpkt | (fhstate != `FHIDLE);
            // Pass BI write strobe to SLIP directly.
-           // Add strobes for CRC bytes unless SLIP is applying back pressue
+           // Add strobes for CRC bytes unless SLIP is applying back pressure
     assign ocrfhwr   = icrfhwr | ((~icrfhtxe_) & ((fhstate == `FHCRCH) | (fhstate == `FHCRCL)));
 
 

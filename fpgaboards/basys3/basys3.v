@@ -82,7 +82,7 @@ module basys3(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     wire   [15:0] perid;     // ID of peripheral in core specified by ADR_I 
     perilist periids(ADR_I[4:1], perid);
     wire   n10clk;           // ten nanosecond clock
-    reg    [15:0] ledreg;    // register the PCPINs to drive the monitior LEDs
+    reg    [15:0] ledreg;    // register the PCPINs to drive the monitor LEDs
     reg    [20:0] swreg1;    // 16 slide switches plus 5 push buttons
     reg    [20:0] swreg2;    // Used for debounce
     reg    [20:0] swreg3;    // Used for debounce
